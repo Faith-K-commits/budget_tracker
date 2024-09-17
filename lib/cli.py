@@ -75,15 +75,15 @@ def display_users(session):
         print("No users to display")
 
 def find_user_by_attribute(session):
-    search_value = input("Enter search value(username): ")
-    if search_value == 'username':
-        user = session.query(User).filter_by(username=search_value).first()
-        if user:
-            print(user)
-        else:
-            print("User not found.")
+    attribute = input("Enter username to search for: ")
+    if not attribute:
+        print("Attribute cannot be empty.")
+        return
+    user = session.query(User).filter_by(username=attribute).first()
+    if user:
+        print(user)
     else:
-        print("Invalid search value.")
+        print("User not found.")
 
 def create_category(session):
     name = input("Enter category name: ")
