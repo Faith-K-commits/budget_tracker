@@ -1,4 +1,4 @@
-from lib.db.models import Session, User, Category, Transaction
+from lib.db.models import Session, User
 
 def debug():
     session = Session()

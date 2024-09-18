@@ -27,14 +27,18 @@ def main():
         elif choice == '6':
             delete_category(session)
         elif choice == '7':
-            display_categories(session)
+            find_category_by_id(session)
         elif choice == '8':
-            create_transaction(session)
+            display_categories(session)
         elif choice == '9':
-            delete_transaction(session)
+            create_transaction(session)
         elif choice == '10':
-            display_transactions(session)
+            delete_transaction(session)
         elif choice == '11':
+            display_transactions(session)
+        elif choice == '12':
+            find_transaction_by_id(session)
+        elif choice == '13':
             view_user_transactions(session)
         elif choice == 'q':
             print("Exiting...")
@@ -57,7 +61,11 @@ def create_user(session):
     print(f"User {username} created successfully.")
 
 def delete_user(session):
-    user_id = int(input("Enter user ID to delete: "))
+    try:
+        user_id = int(input("Enter user ID to delete: "))
+    except ValueError:
+        print("Invalid input. Please enter a valid integer for the user ID.")
+        return
     user = session.get(User, user_id)
     if not user:
         print("User not found.")
@@ -74,16 +82,20 @@ def display_users(session):
     else:
         print("No users to display")
 
+
 def find_user_by_attribute(session):
-    attribute = input("Enter username to search for: ")
-    if not attribute:
-        print("Attribute cannot be empty.")
-        return
-    user = session.query(User).filter_by(username=attribute).first()
-    if user:
-        print(user)
-    else:
-        print("User not found.")
+    try:
+        attribute = input("Enter the username to search for: ").strip().lower()
+        if not attribute.strip():
+            print("Username cannot be empty.")
+            return
+        user = session.query(User).filter_by(username=attribute).first()
+        if user:
+            print(f"User found: {user}")
+        else:
+            print("User not found.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 def create_category(session):
     name = input("Enter category name: ")
@@ -99,14 +111,50 @@ def create_category(session):
     print(f"Category {name} created successfully.")
 
 def delete_category(session):
-    category_id = int(input("Enter category ID to delete: "))
+    try:
+        user_id = int(input("Enter user ID: "))
+    except ValueError:
+        print("Invalid input. Please enter a valid integer for the user ID.")
+        return
+    user = session.get(User, user_id)
+    if not user:
+        print("User not found.")
+        return
+
+    categories = session.query(Category).join(Transaction).filter(Transaction.user_id == user_id).all()
+    if not categories:
+        print("No categories found for this user.")
+        return
+
+    print("Categories for user:")
+    for category in categories:
+        print(category)
+
+    try:
+        category_id = int(input("Enter category ID to delete: "))
+    except ValueError:
+        print("Invalid input. Please enter a valid integer for the category ID.")
+        return
     category = session.get(Category, category_id)
     if not category:
         print("Category not found.")
         return
+
     session.delete(category)
     session.commit()
     print(f"Category {category_id} deleted successfully.")
+
+def find_category_by_id(session):
+    try:
+        category_id = int(input("Enter category ID to search for: "))
+    except ValueError:
+        print("Invalid input. Please enter a valid integer for the category ID.")
+        return
+    category = session.get(Category, category_id)
+    if category:
+        print(category)
+    else:
+        print("Category not found.")
 
 def display_categories(session):
     categories = session.query(Category).all()
@@ -117,10 +165,21 @@ def display_categories(session):
         print("No categories to display")
 
 def create_transaction(session):
-    description = input("Enter transaction description: ")
-    amount = float(input("Enter transaction amount: "))
-    user_id = int(input("Enter user ID: "))
-    category_id = int(input("Enter category ID: "))
+    description = input("Enter transaction description: ").strip()
+    if not description:
+        print("Transaction description cannot be empty.")
+        return
+
+    try:
+        amount = float(input("Enter transaction amount: ").strip())
+        if amount <= 0:
+            raise ValueError("Amount must be positive.")
+    except ValueError as e:
+        print(f"Invalid amount: {e}")
+        return
+
+    user_id = int(input("Enter user ID: ").strip())
+    category_id = int(input("Enter category ID: ").strip())
     user = session.get(User, user_id)
     category = session.get(Category, category_id)
     if not user:
@@ -129,6 +188,7 @@ def create_transaction(session):
     if not category:
         print("Category not found.")
         return
+
     transaction = Transaction(
         description=description,
         amount=amount,
@@ -139,12 +199,37 @@ def create_transaction(session):
     session.commit()
     print("Transaction created successfully.")
 
+
 def delete_transaction(session):
-    transaction_id = int(input("Enter transaction ID to delete: "))
-    transaction = session.get(Transaction, transaction_id)
-    if not transaction:
-        print("Transaction not found.")
+    try:
+        user_id = int(input("Enter user ID: "))
+    except ValueError:
+        print("Invalid input. Please enter a valid integer for the user ID.")
         return
+    user = session.get(User, user_id)
+    if not user:
+        print("User not found.")
+        return
+
+    transactions = session.query(Transaction).filter_by(user_id=user_id).all()
+    if not transactions:
+        print("No transactions found for this user.")
+        return
+
+    print("Transactions for user:")
+    for transaction in transactions:
+        print(transaction)
+
+    try:
+        transaction_id = int(input("Enter transaction ID to delete: "))
+    except ValueError:
+        print("Invalid input. Please enter a valid integer for the transaction ID.")
+        return
+    transaction = session.get(Transaction, transaction_id)
+    if not transaction or transaction.user_id != user_id:
+        print("Transaction not found or does not belong to this user.")
+        return
+
     session.delete(transaction)
     session.commit()
     print(f"Transaction {transaction_id} deleted successfully.")
@@ -157,8 +242,24 @@ def display_transactions(session):
     else:
         print("No transactions to display")
 
+def find_transaction_by_id(session):
+    try:
+        transaction_id = int(input("Enter transaction ID to search for: "))
+    except ValueError:
+        print("Invalid input. Please enter a valid integer for the transaction ID.")
+        return
+    transaction = session.get(Transaction, transaction_id)
+    if transaction:
+        print(transaction)
+    else:
+        print("Transaction not found.")
+
 def view_user_transactions(session):
-    user_id = int(input("Enter user ID: "))
+    try:
+        user_id = int(input("Enter user ID: "))
+    except ValueError:
+        print("Invalid input. Please enter a valid integer for the user ID.")
+        return
     user = session.get(User, user_id)
     if not user:
         print("User not found.")
@@ -172,5 +273,3 @@ def view_user_transactions(session):
 
 if __name__ == "__main__":
     main()
-
-# TODO: Add user permissions to the CLI
