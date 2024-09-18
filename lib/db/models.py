@@ -29,7 +29,7 @@ class User(Base):
             raise ValueError("Username must be between 3 and 20 characters long.")
         if not value.isalnum():
             raise ValueError("Username must be alphanumeric (letters and numbers only).")
-        self._username = value
+        self._username = value.lower()
 
 # Model for categories
 class Category(Base):

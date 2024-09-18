@@ -6,6 +6,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 from lib.db.models import Session, User, Category, Transaction
 from lib.helpers import display_menu
+from sqlalchemy import func
 
 def main():
     session = Session()
@@ -86,10 +87,11 @@ def display_users(session):
 def find_user_by_attribute(session):
     try:
         attribute = input("Enter the username to search for: ").strip().lower()
-        if not attribute.strip():
+        if not attribute:
             print("Username cannot be empty.")
             return
-        user = session.query(User).filter_by(username=attribute).first()
+        # Use case-insensitive comparison
+        user = session.query(User).filter(func.lower(User._username) == attribute).first()
         if user:
             print(f"User found: {user}")
         else:
