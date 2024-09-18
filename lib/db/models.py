@@ -37,13 +37,13 @@ class Category(Base):
 
     id = Column(Integer, primary_key=True)
     _name = Column("name", String, nullable=False)
-    # user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    #
-    # user = relationship('User', backref='categories')
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+
+    user = relationship('User', backref='categories')
     transactions = relationship('Transaction', backref='category')
 
     def __repr__(self):
-        return f"Category(id={self.id}, name={self.name})"
+        return f"Category(id={self.id}, name={self.name}, user_id={self.user_id})"
 
     @property
     def name(self):

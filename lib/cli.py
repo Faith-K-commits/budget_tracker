@@ -102,13 +102,26 @@ def create_category(session):
     if not name:
         print("Category name cannot be empty.")
         return
-    if session.query(Category).filter_by(name=name).first():
-        print("Category with that name already exists.")
+
+    try:
+        user_id = int(input("Enter user ID: "))
+    except ValueError:
+        print("Invalid input. Please enter a valid integer for the user ID.")
         return
-    category = Category(name=name)
+
+    user = session.get(User, user_id)
+    if not user:
+        print("User not found.")
+        return
+
+    if session.query(Category).filter_by(name=name, user_id=user_id).first():
+        print("Category with that name already exists for this user.")
+        return
+
+    category = Category(name=name, user_id=user_id)
     session.add(category)
     session.commit()
-    print(f"Category {name} created successfully.")
+    print(f"Category {name} created successfully for user {user_id}.")
 
 def delete_category(session):
     try:
@@ -116,12 +129,13 @@ def delete_category(session):
     except ValueError:
         print("Invalid input. Please enter a valid integer for the user ID.")
         return
+
     user = session.get(User, user_id)
     if not user:
         print("User not found.")
         return
 
-    categories = session.query(Category).join(Transaction).filter(Transaction.user_id == user_id).all()
+    categories = session.query(Category).filter_by(user_id=user_id).all()
     if not categories:
         print("No categories found for this user.")
         return
@@ -135,9 +149,10 @@ def delete_category(session):
     except ValueError:
         print("Invalid input. Please enter a valid integer for the category ID.")
         return
+
     category = session.get(Category, category_id)
-    if not category:
-        print("Category not found.")
+    if not category or category.user_id != user_id:
+        print("Category not found or does not belong to this user.")
         return
 
     session.delete(category)
