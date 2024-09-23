@@ -12,7 +12,7 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     _username = Column("username", String, nullable=False, unique=True)
 
-    transactions = relationship('Transaction', backref='user')
+    transactions = relationship('Transaction', back_populates='user')
 
     def __repr__(self):
         return f"User(id={self.id}, username={self.username})"
@@ -39,8 +39,8 @@ class Category(Base):
     _name = Column("name", String, nullable=False)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
 
-    user = relationship('User', backref='categories')
-    transactions = relationship('Transaction', backref='category')
+    user = relationship('User', back_populates='categories')
+    transactions = relationship('Transaction', back_populates='category')
 
     def __repr__(self):
         return f"Category(id={self.id}, name={self.name}, user_id={self.user_id})"
